@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import requests
-import urllib.parse
-import json
 
 API_TOKEN = '2050867b5d83e762932efeb84042c510fe9f5440'
 ADDRESS = 'https://egk.okdesk.ru'
+
 
 class OKDeskAPI:
     def __init__(self, api_token):
@@ -55,8 +54,6 @@ class OKDeskAPI:
                 url = f"{self.address}/api/v1/contacts/list?api_token={self.api_token}&page[size]={STEP}&page[from_id]={from_id}"
             response = requests.get(url)
 
-
-
             if response.status_code == 200:
                 contacts = response.json()
                 print("Список контактов:")
@@ -67,12 +64,12 @@ class OKDeskAPI:
                 self.contacts_data += contacts
 
                 # условие выхода из цикла
-                if len(contacts)<STEP:
+                if len(contacts) < STEP:
                     return self.contacts_data
 
                 # получаем id последней записи, чтоб с нее продолжиь в следующий раз.
                 from_id = contacts[-1]['id']
-                #return contacts
+                # return contacts
             else:
                 print(f"Ошибка при получении контактов. Код ошибки: {response.status_code}")
                 print(response.json())
@@ -127,6 +124,19 @@ class OKDeskAPI:
     @property
     def companies(self):
         return self.get_companies()
+
+    def get_contacts_by_custom_attribute(self, attribute, value):
+
+        result = []
+        for contact in self.contacts_data:
+            for parameter in contact['parameters']:
+                if not parameter['code'] == attribute:
+                    continue
+                if not (parameter['value'] == value):
+                    continue
+                result.append(contact)
+
+        return result
 
     def create_employee(self, first_name, last_name, email, login, password, role_ids):
         url = f"{self.address}/api/v1/employees/?api_token={self.api_token}"
@@ -184,9 +194,9 @@ if __name__ == '__main__':
 
     okdesk_api = OKDeskAPI(api_token)
 
-    #roles = okdesk_api.get_roles()
-    #contacts = okdesk_api.get_contacts()
-    #companies = okdesk_api.get_companies
+    # roles = okdesk_api.get_roles()
+    # contacts = okdesk_api.get_contacts()
+    # companies = okdesk_api.get_companies
 
     print(okdesk_api.roles)
     print(okdesk_api.contacts)
@@ -206,3 +216,8 @@ if __name__ == '__main__':
     # issues = get_issues(api_token,[555,533])
 
     # okdesk_api.get_department_members()
+
+    results = okdesk_api.get_contacts_by_custom_attribute(attribute='depart', value='Отдел сервисного обслуживания')
+
+    for result in results:
+        print(result)
