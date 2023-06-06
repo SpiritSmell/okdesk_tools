@@ -1,137 +1,174 @@
 # -*- coding: utf-8 -*-
 import requests
+import urllib.parse
+import json
 
 API_TOKEN = '2050867b5d83e762932efeb84042c510fe9f5440'
 ADDRESS = 'https://egk.okdesk.ru'
 
+class OKDeskAPI:
+    def __init__(self, api_token):
+        self.api_token = api_token
+        self.address = 'https://egk.okdesk.ru'
+        self.roles_data = None
+        self.contacts_data = None
+        self.companies_data = None
 
-def get_roles(api_token):
-    url = f"{ADDRESS}/api/v1/employees/roles?api_token={api_token}"
+    def fetch_roles(self):
+        url = f"{self.address}/api/v1/employees/roles?api_token={self.api_token}"
+        response = requests.get(url)
 
-    response = requests.get(url)
+        if response.status_code == 200:
+            roles = response.json()
+            print("Список ролей:")
+            for role in roles:
+                print(role)
+            self.roles_data = roles
+            return roles
+        else:
+            print(f"Ошибка при получении ролей. Код ошибки: {response.status_code}")
+            print(response.json())
+            return None
 
-    if response.status_code == 200:
-        roles = response.json()
-        print("Список ролей:")
-        for role in roles:
-            print(role)
-        return roles
-    else:
-        print(f"Ошибка при получении ролей. Код ошибки: {response.status_code}")
-        print(response.json())
-        return None
+    def get_roles(self):
+        if not self.roles_data:
+            self.fetch_roles()
+        return self.roles_data
 
+    @property
+    def roles(self):
+        return self.get_roles()
 
-def get_contacts(api_token, from_id='1',):
-    url = f"{ADDRESS}/api/v1/contacts/list?api_token={api_token}&page[size]=100&page[from_id]={from_id}&page[direction]=forward"
+    def fetch_contacts(self, from_id='1'):
 
-    response = requests.get(url)
+        from_id = 1
+        STEP = 100
+        first_request = True
+        self.contacts_data = []
 
-    if response.status_code == 200:
-        roles = response.json()
-        print("Список контактов:")
-        for role in roles:
-            print(role)
-        return roles
-    else:
-        print(f"Ошибка при получении контактов. Код ошибки: {response.status_code}")
-        print(response.json())
-        return None
-
-
-def get_companies(api_token):
-    url = f"{ADDRESS}/api/v1/companies/list?api_token={api_token}"
-
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        roles = response.json()
-        print("Список компаний:")
-        for role in roles:
-            print(role)
-        return roles
-    else:
-        print(f"Ошибка при получении компаний. Код ошибки: {response.status_code}")
-        print(response.json())
-        return None
+        while True:
+            if first_request:
+                # запрашиваем без значения from_if
+                url = f"{self.address}/api/v1/contacts/list?api_token={self.api_token}&page[size]={STEP}"
+                first_request = False
+            else:
+                url = f"{self.address}/api/v1/contacts/list?api_token={self.api_token}&page[size]={STEP}&page[from_id]={from_id}"
+            response = requests.get(url)
 
 
-def create_employee(api_token, first_name, last_name, email, login, password, role_ids):
-    url = f"{ADDRESS}/api/v1/employees/?api_token={api_token}"
 
-    data = {
-        "first_name": first_name,
-        "last_name": last_name,
-        "email": email,
-        "login": login,
-        "password": password,
-        "role_ids": role_ids
-    }
+            if response.status_code == 200:
+                contacts = response.json()
+                print("Список контактов:")
+                for contact in contacts:
+                    print(contact)
 
-    response = requests.post(url, json=data)
+                # добавляем данные к внутренней переменной
+                self.contacts_data += contacts
 
-    if response.status_code == 200:
-        print("Сотрудник успешно создан.")
-    else:
-        print(f"Ошибка при создании сотрудника. Код ошибки: {response.status_code}")
-        print(response.json())
+                # условие выхода из цикла
+                if len(contacts)<STEP:
+                    return self.contacts_data
 
+                # получаем id последней записи, чтоб с нее продолжиь в следующий раз.
+                from_id = contacts[-1]['id']
+                #return contacts
+            else:
+                print(f"Ошибка при получении контактов. Код ошибки: {response.status_code}")
+                print(response.json())
+                return None
 
-def create_contact(api_token, first_name, last_name, company_id, department_name, **kwargs):
-    url = f"{ADDRESS}/api/v1/contacts/?api_token={api_token}"
+    def get_contacts(self):
+        if not self.contacts_data:
+            self.fetch_contacts()
+        return self.contacts_data
 
-    data = {
-        "first_name": first_name,
-        "last_name": last_name,
-        "company_id": company_id,
-        "custom_parameters": {'depart': department_name},
-        **kwargs
-    }
+    def find_contacts(self, search_string):
+        url = f"{ADDRESS}/api/v1/contacts/?api_token={self.api_token}&search_string={search_string}"
 
-    response = requests.post(url, json=data)
+        response = requests.get(url)
 
-    if response.status_code == 200:
-        contact_id = response.json()["id"]
-        print(f"Контакт успешно создан. ID контакта: {contact_id}")
-        return contact_id
-    else:
-        print(f"Ошибка при создании контакта. Код ошибки: {response.status_code}")
-        print(response.json())
-        return None
+        if response.status_code == 200:
+            results = response.json()
+            print("Список ролей:")
+            for result in results:
+                print(result)
+            return results
+        else:
+            print(f"Ошибка при получении ролей. Код ошибки: {response.status_code}")
+            print(response.json())
+            return None
 
+    @property
+    def contacts(self):
+        return self.get_contacts()
 
-def archive_contact(api_token, contact_id):
-    url = f"{ADDRESS}/api/v1/contacts/{contact_id}/activations?api_token={api_token}"
+    def fetch_companies(self):
+        url = f"{self.address}/api/v1/companies/list?api_token={self.api_token}"
+        response = requests.get(url)
 
-    data = {
-        "active": False
-    }
+        if response.status_code == 200:
+            companies = response.json()
+            print("Список компаний:")
+            for company in companies:
+                print(company)
+            self.companies_data = companies
+            return companies
+        else:
+            print(f"Ошибка при получении компаний. Код ошибки: {response.status_code}")
+            print(response.json())
+            return None
 
-    response = requests.patch(url, json=data)
+    def get_companies(self):
+        if not self.companies_data:
+            self.fetch_companies()
+        return self.companies_data
 
-    if response.status_code == 200:
-        print(f"Контакт с ID {contact_id} успешно архивирован.")
-    else:
-        print(f"Ошибка при архивации контакта с ID {contact_id}. Код ошибки: {response.status_code}")
-        print(response.json())
+    @property
+    def companies(self):
+        return self.get_companies()
 
-def find_contacts(api_token, search_string):
-    url = f"{ADDRESS}/api/v1/contacts/?api_token={api_token}&search_string={search_string}"
+    def create_employee(self, first_name, last_name, email, login, password, role_ids):
+        url = f"{self.address}/api/v1/employees/?api_token={self.api_token}"
 
-    response = requests.get(url)
+        data = {
+            "first_name": first_name,
+            "last_name": last_name,
+            "email": email,
+            "login": login,
+            "password": password,
+            "role_ids": role_ids
+        }
 
-    if response.status_code == 200:
-        results = response.json()
-        print("Список ролей:")
-        for result in results:
-            print(result)
-        return results
-    else:
-        print(f"Ошибка при получении ролей. Код ошибки: {response.status_code}")
-        print(response.json())
-        return None
+        response = requests.post(url, json=data)
 
+        if response.status_code == 200:
+            print("Сотрудник успешно создан.")
+        else:
+            print(f"Ошибка при создании сотрудника. Код ошибки: {response.status_code}")
+            print(response.json())
 
+    def create_contact(self, first_name, last_name, company_id, department_name, **kwargs):
+        url = f"{self.address}/api/v1/contacts/?api_token={self.api_token}"
+
+        data = {
+            "first_name": first_name,
+            "last_name": last_name,
+            "company_id": company_id,
+            "custom_parameters": {'depart': department_name},
+            **kwargs
+        }
+
+        response = requests.post(url, json=data)
+
+        if response.status_code == 200:
+            contact_id = response.json()["id"]
+            print(f"Контакт успешно создан. ID контакта: {contact_id}")
+            return contact_id
+        else:
+            print(f"Ошибка при создании контакта. Код ошибки: {response.status_code}")
+            print(response.json())
+            return None
 
 
 if __name__ == '__main__':
@@ -145,17 +182,27 @@ if __name__ == '__main__':
     company_id = 3
     department_name = 'Отдел сервисного обслуживания'
 
-    roles = get_roles(api_token)
-    contacts = get_contacts(api_token)
-    companies = get_companies(api_token)
+    okdesk_api = OKDeskAPI(api_token)
 
-    contacts = find_contacts(api_token,"vadim")
-    # create_employee(api_token, first_name, last_name, email, login, password, role_ids)
+    #roles = okdesk_api.get_roles()
+    #contacts = okdesk_api.get_contacts()
+    #companies = okdesk_api.get_companies
 
-    # create_contact(api_token, first_name, last_name, email=email, company_id=company_id,
-    #                department_name=department_name)
+    print(okdesk_api.roles)
+    print(okdesk_api.contacts)
+    print(okdesk_api.companies)
+
+    contacts = okdesk_api.find_contacts("vadim")
+    # okdesk_api.create_employee(first_name, last_name, email, login, password, role_ids)
+
+    # okdesk_api.create_contact(first_name, last_name, email=email, company_id=company_id,
+    #                          department_name=department_name)
 
     contact_id = 598
 
     # for contact in range (contact_id,1000):
     #    archive_contact(api_token, contact)
+
+    # issues = get_issues(api_token,[555,533])
+
+    # okdesk_api.get_department_members()
