@@ -13,7 +13,7 @@ def main():
         authors_list.append(author['id'])
 
     # get issues ids for these authors
-    issues_ids = okdesk_api.fetch_issues_list_by_contaсt(authors_list)
+    issues_ids = okdesk_api.fetch_issues_list_by_contaсt(authors_list, SINCE, UNTIL)
 
     # get issues for these IDs
     issues = okdesk_api.get_issues(issues_ids)
@@ -31,17 +31,22 @@ def print_help():
         "value>")
     print(" -j|--json <json file name>  -k|--key <API key> ")
     print(" -a|--address <okdesk domain address>")
+    print(" -s|--since <since date>")
+    print(" -u|--until <until date>")
     print(
         'Example: extract_issues.py --attribute_name="depart"  --attribute_value="Отдел сервисного обслуживания" '
-        '--key="2050867b5d83e762932efeb84042c510fe9f" --address="https://egk.okdesk.ru"')
+        '--key="2050867b5d83e762932efeb84042c510fe9f" --address="https://egk.okdesk.ru" --since="02-02-2023" '
+        '--until="02-07-2023"')
 
 
 if __name__ == '__main__':
 
+    SINCE = None
+    UNTIL = None
     # options definition
-    short_options = "han:av:j:k:a:"
+    short_options = "han:av:j:k:a:s:u:"
     long_options = ["help", "attribute_name=", "attribute_value=", "json=",
-                    "key=", "address="]
+                    "key=", "address=","since=","until="]
 
     # get command line arguments
     arguments, values = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -68,6 +73,12 @@ if __name__ == '__main__':
         elif current_argument in ("-a", "--address"):
             ADDRESS = current_value
             print("Address:", ADDRESS)
+        elif current_argument in ("-s", "--since"):
+            SINCE = current_value
+            print("Since:", SINCE)
+        elif current_argument in ("-u", "--until"):
+            UNTIL = current_value
+            print("Until:", UNTIL)
 
     # Обработка оставшихся аргументов
     for value in values:
