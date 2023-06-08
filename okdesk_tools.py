@@ -1,14 +1,26 @@
 # -*- coding: utf-8 -*-
 import requests
+import time
+import json
 
 API_TOKEN = '2050867b5d83e762932efeb84042c510fe9f5440'
 ADDRESS = 'https://egk.okdesk.ru'
+RETRY_ATTEMPTS = 5
 
+JSON_FILE_NAME = 'issues.json'
+
+FILTER_ATTRIBUTE_NAME = 'depart'
+FILTER_ATTRIBUTE_VALUE = 'Отдел сервисного обслуживания'
+
+def save_json_to_file(data, filename):
+    with open(filename, 'w') as file:
+        json.dump(data, file)
 
 class OKDeskAPI:
-    def __init__(self, api_token):
+    def __init__(self, api_token, address):
         self.api_token = api_token
-        self.address = 'https://egk.okdesk.ru'
+        self.address = address
+        self.issues_data = None
         self.roles_data = None
         self.contacts_data = None
         self.companies_data = None
@@ -125,9 +137,86 @@ class OKDeskAPI:
     def companies(self):
         return self.get_companies()
 
+    def fetch_issues_list_by_contaсt(self,authors=[460,461]):
+
+        authors_url = ""
+        for author in authors:
+            authors_url +=f"&contact_ids[]={author}"
+
+        url = f"{self.address}/api/v1/issues/count?api_token={self.api_token}{authors_url}"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            issues = response.json()
+            print("Список заявок:")
+            for issue in issues:
+                print(issue)
+            self.issues_data = issues
+            return issues
+        else:
+            print(f"Ошибка при получении заявок. Код ошибки: {response.status_code}")
+            print(response.json())
+            return None
+
+    def fetch_issues_detaild_by_contact(self,authors=[460,461]):
+
+        authors_url = ""
+        for author in authors:
+            authors_url +=f"&contact_ids[]={author}"
+
+        url = f"{self.address}/api/v1/issues/list?api_token={self.api_token}{authors_url}"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            issues = response.json()
+            print("Список заявок:")
+            for issue in issues:
+                print(issue)
+            self.issues_data = issues
+            return issues
+        else:
+            print(f"Ошибка при получении заявок. Код ошибки: {response.status_code}")
+            print(response.json())
+            return None
+
+    def fetch_issue_details_by_id(self, issue):
+
+        url = f"{self.address}/api/v1/issues/{issue}?api_token={self.api_token}"
+        for attempt in range(RETRY_ATTEMPTS):
+            try:
+                response = requests.get(url)
+                # если все хорошо, то выходим из цикла
+                break
+            except requests.exceptions.RequestException as e:
+                # если нет, то повторяем запрос
+                print(f"Ошибка при выполнении запроса: {e}")
+
+        if response.status_code == 200:
+            issue = response.json()
+            print(f"Заявка: {issue}")
+            return issue
+        else:
+            print(f"Ошибка при получении заявок. Код ошибки: {response.status_code}")
+            print(response.json())
+            return None
+    def fetch_issues_by_ids(self,issues):
+
+        result = []
+        for issue in issues:
+            result.append(self.fetch_issue_details_by_id(issue))
+            #time.sleep(1)
+        return result
+
+
+    def get_issues(self, issues_ids):
+        return self.fetch_issues_by_ids(issues_ids)
+
     def get_contacts_by_custom_attribute(self, attribute, value):
 
         result = []
+        if not self.contacts_data:
+            self.get_contacts()
+
         for contact in self.contacts_data:
             for parameter in contact['parameters']:
                 if not parameter['code'] == attribute:
@@ -180,6 +269,10 @@ class OKDeskAPI:
             print(response.json())
             return None
 
+def add_attribute(json_data,attribute_name, attribute_value):
+    for item in json_data:
+        item[attribute_name]=attribute_value
+    return json_data
 
 if __name__ == '__main__':
     api_token = API_TOKEN
@@ -192,15 +285,15 @@ if __name__ == '__main__':
     company_id = 3
     department_name = 'Отдел сервисного обслуживания'
 
-    okdesk_api = OKDeskAPI(api_token)
+    okdesk_api = OKDeskAPI(api_token, ADDRESS)
 
     # roles = okdesk_api.get_roles()
     # contacts = okdesk_api.get_contacts()
     # companies = okdesk_api.get_companies
 
-    print(okdesk_api.roles)
-    print(okdesk_api.contacts)
-    print(okdesk_api.companies)
+    #print(okdesk_api.roles)
+    #print(okdesk_api.contacts)
+    #print(okdesk_api.companies)
 
     contacts = okdesk_api.find_contacts("vadim")
     # okdesk_api.create_employee(first_name, last_name, email, login, password, role_ids)
@@ -217,7 +310,24 @@ if __name__ == '__main__':
 
     # okdesk_api.get_department_members()
 
-    results = okdesk_api.get_contacts_by_custom_attribute(attribute='depart', value='Отдел сервисного обслуживания')
+    authors = okdesk_api.get_contacts_by_custom_attribute(attribute='depart', value='Отдел сервисного обслуживания')
 
-    for result in results:
-        print(result)
+    authors_list = []
+    for author in authors:
+        authors_list.append(author['id'])
+
+
+    issues_ids = okdesk_api.fetch_issues_list_by_contaсt(authors_list)
+
+    #for result in results:
+    #    print(result)
+
+    results = okdesk_api.get_issues(issues_ids)
+
+    # добавляем параметр FILTER_ATTRIBUTE_NAME равный FILTER_ATTRIBUTE_VALUE
+
+    add_attribute(json_data=results,attribute_name=FILTER_ATTRIBUTE_NAME,attribute_value=FILTER_ATTRIBUTE_VALUE)
+
+    save_json_to_file(results,JSON_FILE_NAME)
+
+
