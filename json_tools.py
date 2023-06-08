@@ -96,7 +96,7 @@ def save_data_to_excel(data, filename):
 
 def save_json_to_file(data, filename):
     with open(filename, 'w') as file:
-        json.dump(data, file)
+        json.dump(data, file, indent = 4, ensure_ascii=False)
 
 if __name__ == '__main__':
     EXPORT_FIELDS = load_json_from_file('json_to_excel.cfg')

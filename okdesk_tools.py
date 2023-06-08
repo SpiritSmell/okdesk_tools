@@ -15,7 +15,7 @@ FILTER_ATTRIBUTE_VALUE = 'Отдел сервисного обслуживани
 
 def save_json_to_file(data, filename):
     with open(filename, 'w') as file:
-        json.dump(data, file)
+        json.dump(data, file, indent = 4)
 
 
 class OKDeskAPI:

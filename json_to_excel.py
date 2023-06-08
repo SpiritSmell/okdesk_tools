@@ -3,7 +3,7 @@ import getopt
 import sys
 
 JSON_FILE_NAME = 'issues.json'
-EXCEL_FILE_NAME = "data.xlsx"
+EXCEL_FILE_NAME = 'data.xlsx'
 CONFIG_FILENAME = 'json_to_excel.cfg'
 
 
