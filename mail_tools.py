@@ -26,7 +26,7 @@ def send_email(sender_email, sender_password, receiver_email, subject, message, 
         # Устанавливаем заголовок файла
         part.add_header('Content-Disposition', f'attachment; filename= {file_path}')
         # Прикрепляем вложение к сообщению
-        msg.attach(part)
+        # msg.attach(part)
 
     # Устанавливаем SMTP-сервер и порт
     smtp_server = 'eurasia-kz.mail.protection.outlook.com'
