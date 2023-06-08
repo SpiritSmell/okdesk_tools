@@ -161,7 +161,7 @@ class OKDeskAPI:
             print(response.json())
             return None
 
-    def fetch_issues_detaild_by_contact(self, authors=[460, 461]):
+    def fetch_issues_detaild_by_contact(self, authors=[]):
 
         authors_url = ""
         for author in authors:
