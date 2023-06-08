@@ -100,10 +100,11 @@ def save_json_to_file(data, filename):
 
 if __name__ == '__main__':
     EXPORT_FIELDS = load_json_from_file('json_to_excel.cfg')
-    json_data = load_json_from_file(JSON_FILE_NAME)
+    save_json_to_file(EXPORT_FIELDS,'json_to_excel.cfg')
+  #  json_data = load_json_from_file(JSON_FILE_NAME)
 
-    rows = fill_out_data(json_data, EXPORT_FIELDS)
-    df = pd.DataFrame(rows)
-    save_data_to_excel(rows, EXCEL_FILE_NAME)
+   # rows = fill_out_data(json_data, EXPORT_FIELDS)
+  #  df = pd.DataFrame(rows)
+   # save_data_to_excel(rows, EXCEL_FILE_NAME)
 
 

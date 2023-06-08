@@ -80,7 +80,7 @@ def save_json_to_file(data, filename):
         json.dump(data, file, indent = 4, ensure_ascii=False)
 
 def load_json_from_file(filename):
-    with open(filename, 'r') as file:
+    with open(filename, 'r', encoding='cp1251') as file:
         data = json.load(file)
     return data
 

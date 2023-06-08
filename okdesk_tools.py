@@ -194,7 +194,7 @@ class OKDeskAPI:
 
         if response.status_code == 200:
             issue = response.json()
-            print(f"Issue: {issue}")
+            print(f"Issue: {issue['id']} {issue['title']}")
             return issue
         else:
             print(f"Error fetching issues. Error code: {response.status_code}")
