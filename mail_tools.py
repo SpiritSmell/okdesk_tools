@@ -1,49 +1,67 @@
+import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
 from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
 
 
-def send_email(sender_email, sender_password, receiver_email, subject, message, file_path):
-    # Создаем объект MIMEMultipart
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = receiver_email
-    msg['Subject'] = subject
+class EmailSender:
+    def __init__(self, smtp_server, smtp_port, sender_email):
+        self.smtp_server = smtp_server
+        self.smtp_port = smtp_port
+        self.sender_email = sender_email
 
-    # Добавляем текстовое сообщение
-    msg.attach(MIMEText(message, 'plain'))
+    def send_email(self, receiver_emails, subject, message_text, attachment_path=None):
+        # Создаем объект MIMEMultipart для форматирования сообщения
+        message = MIMEMultipart()
 
-    # Открываем файл в режиме бинарного чтения
-    with open(file_path, 'rb') as attachment:
-        # Создаем объект MIMEBase
-        part = MIMEBase('application', 'octet-stream')
-        # Устанавливаем данные файла
-        part.set_payload(attachment.read())
-        # Кодируем вложение в Base64
-        encoders.encode_base64(part)
-        # Устанавливаем заголовок файла
-        part.add_header('Content-Disposition', f'attachment; filename= {file_path}')
-        # Прикрепляем вложение к сообщению
-        # msg.attach(part)
+        # Добавляем текстовую часть письма
+        message.attach(MIMEText(message_text))
 
-    # Устанавливаем SMTP-сервер и порт
+        if attachment_path:
+            # Создаем объект MIMEApplication для вложенного файла
+            with open(attachment_path, 'rb') as file:
+                attachment = MIMEApplication(file.read())
+
+            # Задаем заголовок Content-Disposition для вложения
+            filename = os.path.basename(attachment_path)
+            attachment.add_header('Content-Disposition', 'attachment', filename=filename)
+
+            # Добавляем вложение к сообщению
+            message.attach(attachment)
+
+        # Заполняем необходимые заголовки письма
+        message['Subject'] = subject
+        message['From'] = self.sender_email
+        message['To'] = ', '.join(receiver_emails)
+
+        try:
+            # Устанавливаем соединение с SMTP сервером
+            server = smtplib.SMTP(self.smtp_server, self.smtp_port)
+
+            # Отправляем письмо
+            server.sendmail(self.sender_email, receiver_emails, message.as_string())
+
+            # Закрываем соединение
+            server.quit()
+
+            print('Письмо успешно отправлено.')
+        except smtplib.SMTPException as e:
+            print(f'Ошибка при отправке письма: {str(e)}')
+
+
+if __name__ == '__main__':
+    # Пример использования класса EmailSender
     smtp_server = 'eurasia-kz.mail.protection.outlook.com'
     smtp_port = 25
+    sender_email = 'vladimir.muzychenko@eurasia.kz'
+    receiver_emails = ['receiver1@example.com', 'receiver2@example.com', 'receiver3@example.com']
+    subject = 'Тестовое письмо с вложением'
+    message_text = 'Привет, это тестовое письмо.'
+    attachment_path = 'data.xlsx'
 
-    # Инициализируем SMTP-сессию
-    with smtplib.SMTP(smtp_server, smtp_port) as server:
-        server.starttls()  # Начинаем защищенное соединение
-        server.login(sender_email)  # Входим в аккаунт отправителя
-        server.send_message(msg)  # Отправляем сообщение
+    # Создаем экземпляр класса EmailSender
+    email_sender = EmailSender(smtp_server, smtp_port, sender_email)
 
-# Пример использования
-sender_email = 'okdesk_reports@eurasia.kz'
-sender_password = 'your_password'
-receiver_email = 'recipient@example.com'
-subject = 'Пример отправки файла по электронной почте'
-message = 'Привет, вот файл, который я хотел отправить.'
-file_path = 'path/to/file.pdf'
-
-send_email(sender_email, sender_password, receiver_email, subject, message, file_path)
+    # Отправляем письмо
+    email_sender.send_email(receiver_emails, subject, message_text, attachment_path)

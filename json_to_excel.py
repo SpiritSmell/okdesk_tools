@@ -20,14 +20,10 @@ def print_help():
           '{"status": "name"}]')
 
 
-def main():
-    EXPORT_FIELDS = jt.load_json_from_file(CONFIG_FILENAME)
-    json_data = jt.load_json_from_file(JSON_FILE_NAME)
-    rows = jt.fill_out_data(json_data, EXPORT_FIELDS)
-    jt.save_data_to_excel(rows, EXCEL_FILE_NAME)
-
-
-if __name__ == '__main__':
+def get_arguments():
+    global EXCEL_FILE_NAME
+    global JSON_FILE_NAME
+    global CONFIG_FILENAME
 
     # options definition
     short_options = "he:j:c:"
@@ -56,5 +52,16 @@ if __name__ == '__main__':
     # Обработка оставшихся аргументов
     for value in values:
         print("Extra arguments:", value)
+
+
+def main():
+    EXPORT_FIELDS = jt.load_json_from_file(CONFIG_FILENAME)
+    json_data = jt.load_json_from_file(JSON_FILE_NAME)
+    rows = jt.fill_out_data(json_data, EXPORT_FIELDS)
+    jt.save_data_to_excel(rows, EXCEL_FILE_NAME)
+
+
+if __name__ == '__main__':
+    get_arguments()
 
     main()

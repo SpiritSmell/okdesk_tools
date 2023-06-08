@@ -1,7 +1,7 @@
 # -- coding: utf-8 --
-import requests
-import time
 import json
+
+import requests
 
 API_TOKEN = '2050867b5d83e762932efeb84042c510fe9f5440'
 ADDRESS = 'https://egk.okdesk.ru'

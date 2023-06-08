@@ -39,14 +39,22 @@ def print_help():
         '--until="02-07-2023"')
 
 
-if __name__ == '__main__':
+def get_arguments():
+    global FILTER_ATTRIBUTE_NAME
+    global FILTER_ATTRIBUTE_VALUE
+    global JSON_FILE_NAME
+    global API_TOKEN
+    global ADDRESS
+    global SINCE
+    global UNTIL
 
     SINCE = None
     UNTIL = None
+
     # options definition
     short_options = "han:av:j:k:a:s:u:"
     long_options = ["help", "attribute_name=", "attribute_value=", "json=",
-                    "key=", "address=","since=","until="]
+                    "key=", "address=", "since=", "until="]
 
     # get command line arguments
     arguments, values = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -83,5 +91,9 @@ if __name__ == '__main__':
     # Обработка оставшихся аргументов
     for value in values:
         print("Extra arguments:", value)
+
+
+if __name__ == '__main__':
+    get_arguments()
 
     main()
