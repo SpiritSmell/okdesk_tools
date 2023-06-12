@@ -5,9 +5,8 @@ import pandas as pd
 import re
 
 JSON_FILE_NAME = 'issues.json'
-
 EXCEL_FILE_NAME = "data.xlsx"
-#        "regexp_filter": "Отложена|Решена|В очереди|Ожидание ответа от пользователя"
+
 EXPORT_FIELDS = [{'name': '№ заявки', 'filter': '$.id'},
                  {'name': 'Тема', 'filter': '$.title'},
                  {'name': 'Характер задачи', 'filter': '$.parameters[?(@.code=="A")].value'},
@@ -20,37 +19,74 @@ EXPORT_FIELDS = [{'name': '№ заявки', 'filter': '$.id'},
                  ]
 
 
-# {'parameters': [{0: 'value'}]}
-#regexp_filter": "name\": \"([^\"]*)"
-# EXPORT_FIELDS = ['id', 'title', {'parameters': {'search_name': 'name', 'search_value': 'Характер задачи',
-# 'value': 'value'}}, 'created_at','depart', {'assignee': 'name'}, {'contact': 'name'}, 'observers', {'status':
-# 'name'}]
-
-
-# возвращает True если переменная является словарем
 def is_dict(variable):
+    """
+    Checks if a variable is a dictionary.
+
+    Args:
+        variable: The variable to be checked.
+
+    Returns:
+        bool: True if the variable is a dictionary, False otherwise.
+    """
     return isinstance(variable, dict)
 
 
-# возвращает True если переменная является списком
 def is_list(variable):
+    """
+    Checks if a variable is a list.
+
+    Args:
+        variable: The variable to be checked.
+
+    Returns:
+        bool: True if the variable is a list, False otherwise.
+    """
     return isinstance(variable, list)
 
+
 def is_tuple(variable):
+    """
+    Checks if a variable is a tuple.
+
+    Args:
+        variable: The variable to be checked.
+
+    Returns:
+        bool: True if the variable is a tuple, False otherwise.
+    """
     return isinstance(variable, tuple)
 
 
 def is_dict_subset(source, destination):
+    """
+    Checks if a dictionary is a subset of another dictionary.
+
+    Args:
+        source (dict): The dictionary to check if it is a subset.
+        destination (dict): The dictionary to check against.
+
+    Returns:
+        bool: True if the source dictionary is a subset of the destination dictionary, False otherwise.
+    """
     return all(item in destination.items() for item in source.items())
 
 
 def extract_dict(item, field, row):
-    # иначе разбираем что там внутри
+    """
+    Extracts values from a nested dictionary and assigns them to corresponding keys in the row dictionary.
+
+    Args:
+        item (dict): The dictionary to extract values from.
+        field (dict): The dictionary specifying the nested fields to extract.
+        row (dict): The dictionary to assign the extracted values to.
+
+    Returns:
+        None.
+    """
     for subfield in field:
         try:
-            # вытаскиваем ветвь
             field_value = item[subfield]
-            # если поле пустое
             if not field_value:
                 row[subfield] = ''
                 continue
@@ -64,84 +100,104 @@ def extract_dict(item, field, row):
                         row[subfield] = field_value_item[value_field]
                         continue
                 continue
-            # иначе - добавляем вложенное поле
             row[subfield] = field_value[field[subfield]]
         except Exception as e:
             print(f"Exception {e}")
 
 
 def load_json_from_file(filename):
+    """
+    Loads JSON data from a file.
+
+    Args:
+        filename (str): The name of the file to load.
+
+    Returns:
+        dict: The loaded JSON data.
+    """
     with open(filename, 'r') as file:
         data = json.load(file)
     return data
 
 
 def fill_out_data(json_data, export_fields):
-    # вытаскиваем данные из JSON и помещаем в матрицу
+    """
+    Fills out data from JSON based on the export fields configuration.
+
+    Args:
+        json_data (dict): The JSON data to extract values from.
+        export_fields (list): The list of export field configurations.
+
+    Returns:
+        list: The filled out data rows.
+    """
     rows = []
     for item in json_data:
         row = {}
         for field in export_fields:
-            # если поле не является словарем, то присваиваем и идем дальше
             if not is_dict(field):
                 try:
                     row[field] = item[field]
                 except Exception as e:
                     print(f"Поле {e} не найдено. Проверьте настройки выгрузки.")
                 continue
-            # иначе разбираем что там внутри
             extract_dict(item, field, row)
         rows.append(row)
     return rows
 
+
 def merge_tuples(data):
+    """
+    Merges tuples into a single string.
+
+    Args:
+        data (list): The list of data to merge.
+
+    Returns:
+        list: The merged data list.
+    """
     if not data:
         return None
     result = []
     for item in data:
         if is_tuple(item):
-            item ="".join(item)
+            item = "".join(item)
         result.append(item)
     return result
 
 
 def extract_data(json_data, filter_fields):
-    # вытаскиваем данные из JSON и помещаем в матрицу
+    """
+    Extracts data from JSON based on the filter fields configuration.
+
+    Args:
+        json_data (dict): The JSON data to extract values from.
+        filter_fields (list): The list of filter field configurations.
+
+    Returns:
+        list: The extracted data rows.
+    """
     rows = []
     for item in json_data:
         row = {}
         for filter_field in filter_fields:
             do_not_save_record = False
             jsonpath_expression = parse(filter_field['filter'])
-
-            #matches = [match.value for match in jsonpath_expression.find(item)]
-            ## выбираем только первый элемент
-            #if matches:
-            #    match = matches[0]
-
             match = ''
-
             for match_1 in jsonpath_expression.find(item):
                 match += json.dumps(match_1.value, ensure_ascii=False)
-
-            # на случай если значение было пустое
             if match == '':
                 match = '""'
-            # дополнительный regexp фильтр
             if 'regexp_filter' in filter_field:
                 pattern = filter_field['regexp_filter']
-
                 try:
                     regexp_matches = re.findall(pattern, match)
                 except Exception as e:
                     print(f"Error processing regexps {e} . Check config settings.")
-                # если не подошло по regexp фильтру - выходим из цикла и устанавливаем флаг чтоб не записывать.
                 if not regexp_matches:
                     do_not_save_record = True
                     break
-                # если в результате выполнения фильтра regexp получилось несколько групп, объединяем их в одну
                 regexp_matches = merge_tuples(regexp_matches)
-                # объединяем элементы в одну строку
                 try:
                     match = " ".join(regexp_matches)
                 except Exception as e:
@@ -157,26 +213,41 @@ def extract_data(json_data, filter_fields):
 
 
 def save_data_to_excel(data, filename):
+    """
+    Saves data to an Excel file.
+
+    Args:
+        data (list): The data to be saved.
+        filename (str): The name of the Excel file.
+
+    Returns:
+        None.
+    """
     try:
         df = pd.DataFrame(data)
         df.to_excel(filename, index=False)
         print("Data saved successfully:", filename)
     except Exception as e:
-        print("Error saving data (is file opened elsewhere?):", e)
+        print("Error saving data (is the file opened elsewhere?):", e)
 
 
 def save_json_to_file(data, filename):
+    """
+    Saves JSON data to a file.
+
+    Args:
+        data (dict): The JSON data to be saved.
+        filename (str): The name of the file.
+
+    Returns:
+        None.
+    """
     with open(filename, 'w') as file:
         json.dump(data, file, indent=4, ensure_ascii=False)
 
 
 if __name__ == '__main__':
     EXPORT_FIELDS = load_json_from_file('json_to_excel.cfg')
-    # save_json_to_file(EXPORT_CONFIG,'json_to_excel.cfg')
     json_data = load_json_from_file(JSON_FILE_NAME)
-
-    # rows = fill_out_data(json_data, EXPORT_FIELDS)
-
     rows = extract_data(json_data, EXPORT_FIELDS)
-    #  df = pd.DataFrame(rows)
     save_data_to_excel(rows, EXCEL_FILE_NAME)

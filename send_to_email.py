@@ -3,6 +3,9 @@ import getopt
 import mail_tools
 
 def print_help():
+    """
+    Prints the help message with usage instructions.
+    """
     print("Usage: your_script.py -h|--help -s|--server=<SMTP server> -r|--sender=<sender email> "
           "-f|--receivers=<receiver emails> -t|--subject=<subject> -a|--text=<message text> "
           "--attachment=<attachment path>")
@@ -21,7 +24,11 @@ def print_help():
     print("send_to_mail.py -s smtp.example.com -r sender@example.com -f receiver1@example.com,receiver2@example.com "
           "-t 'Test email' -a 'Hello, this is a test email.' --attachment /path/to/attachment.txt")
 
+
 def get_arguments():
+    """
+    Retrieves and processes the command-line arguments.
+    """
     global smtp_server
     global smtp_port
     global sender_email
@@ -31,18 +38,23 @@ def get_arguments():
     global attachment_path
     smtp_port = 25
 
-    # define parameters
+    # Define parameters
     short_options = "hs:sr:p:r:j:t:a:"
     long_options = ["help", "server=", "port=", "sender=", "receivers=", "subject=", "text=", "attachment="]
 
-    # get command line arguments
-    arguments, values = getopt.getopt(sys.argv[1:], short_options, long_options)
-
-    if len(arguments) < 5:
+    # Get command line arguments
+    try:
+        arguments, values = getopt.getopt(sys.argv[1:], short_options, long_options)
+    except getopt.GetoptError as e:
+        print(e)
         print_help()
         sys.exit(2)
 
-    # process command line parameters
+    if len(arguments) < 5:
+        print_help()
+        sys.exit()
+
+    # Process command line parameters
     for current_argument, current_value in arguments:
         if current_argument in ("-h", "--help"):
             print_help()
@@ -68,14 +80,21 @@ def get_arguments():
             attachment_path = current_value
             print("Attachment path:", attachment_path)
 
-    # process remaining arguments
+    # Process remaining arguments
     for value in values:
         print("Extra arguments:", value)
 
-def main():
 
-    email_sender = mail_tools.EmailSender(smtp_server, smtp_port, sender_email)
-    email_sender.send_email(receiver_emails, subject, message_text, attachment_path)
+def main():
+    """
+    Main function to send an email with attachments using the provided arguments.
+    """
+    try:
+        email_sender = mail_tools.EmailSender(smtp_server, smtp_port, sender_email)
+        email_sender.send_email(receiver_emails, subject, message_text, attachment_path)
+    except Exception as e:
+        print("An error occurred while sending the email:", str(e))
+
 
 if __name__ == '__main__':
     get_arguments()
