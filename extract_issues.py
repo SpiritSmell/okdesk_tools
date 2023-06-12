@@ -1,9 +1,32 @@
 import okdesk_tools as od
 import getopt
 import sys
+import re
+from datetime import datetime, timedelta
 
+SINCE = None
+UNTIL = None
+
+def process_date(date):
+    pattern = r"now\s+([-+]?\d+(\.\d+)?)"
+
+    matches = re.search(pattern, date)
+    if matches:
+        extracted_number = matches.group(1)
+        print(extracted_number)  # Output: "+25.5"
+        number_of_days = float(extracted_number)
+        new_date = datetime.now() + timedelta(days=number_of_days)
+        formatted_date = new_date.strftime("%d-%m-%Y")
+        print(f'new date is {formatted_date}')
+        return formatted_date
+    else:
+        print("No match found.")
+        return date
 
 def main():
+    global SINCE
+    global UNTIL
+
     okdesk_api = od.OKDeskAPI(API_TOKEN, ADDRESS)
     authors = okdesk_api.get_contacts_by_custom_attribute(attribute=FILTER_ATTRIBUTE_NAME, value=FILTER_ATTRIBUTE_VALUE)
 
@@ -11,6 +34,9 @@ def main():
     authors_list = []
     for author in authors:
         authors_list.append(author['id'])
+
+    SINCE = process_date(SINCE)
+    UNTIL = process_date(UNTIL)
 
     # get issues ids for these authors
     issues_ids = okdesk_api.fetch_issues_list_by_contaсt(authors_list, SINCE, UNTIL)
@@ -36,7 +62,7 @@ def print_help():
     print(
         'Example: extract_issues.py --attribute_name="depart"  --attribute_value="Отдел бухгалтерского учета" '
         '--key="2050867b5d83e762932efeb84042c510fe9f" --address="https://egk.okdesk.ru" --since="01-02-2023" '
-        '--until="12-06-2023"')
+        '--until="now -7"')
 
 
 def get_arguments():
