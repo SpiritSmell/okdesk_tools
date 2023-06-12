@@ -5,7 +5,7 @@ import sys
 
 def main():
     okdesk_api = od.OKDeskAPI(API_TOKEN, ADDRESS)
-    authors = okdesk_api.get_contacts_by_custom_attribute(attribute='depart', value='Отдел сервисного обслуживания')
+    authors = okdesk_api.get_contacts_by_custom_attribute(attribute=FILTER_ATTRIBUTE_NAME, value=FILTER_ATTRIBUTE_VALUE)
 
     # extract authors only
     authors_list = []
@@ -34,9 +34,9 @@ def print_help():
     print(" -s|--since <since date>")
     print(" -u|--until <until date>")
     print(
-        'Example: extract_issues.py --attribute_name="depart"  --attribute_value="Отдел сервисного обслуживания" '
-        '--key="2050867b5d83e762932efeb84042c510fe9f" --address="https://egk.okdesk.ru" --since="02-02-2023" '
-        '--until="02-07-2023"')
+        'Example: extract_issues.py --attribute_name="depart"  --attribute_value="Отдел бухгалтерского учета" '
+        '--key="2050867b5d83e762932efeb84042c510fe9f" --address="https://egk.okdesk.ru" --since="01-02-2023" '
+        '--until="12-06-2023"')
 
 
 def get_arguments():

@@ -4,6 +4,8 @@ import json
 import extract_issues as ei
 import json_to_excel as je
 import send_to_email as se
+# ,
+#                             "regexp_filter": "Отложена|Решена|В очереди|Ожидание ответа от пользователя"
 
 SETTINGS = {
     'send_to_email':

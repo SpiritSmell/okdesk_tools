@@ -55,10 +55,10 @@ def get_arguments():
 
 
 def main():
+    print("Export to Excel had started")
     json_data = jt.load_json_from_file(JSON_FILE_NAME)
-    rows = jt.fill_out_data(json_data, EXPORT_FIELDS)
+    rows = jt.extract_data(json_data, EXPORT_FIELDS)
     jt.save_data_to_excel(rows, EXCEL_FILE_NAME)
-
 
 if __name__ == '__main__':
     get_arguments()
