@@ -79,6 +79,9 @@ def get_arguments():
     global SINCE
     global UNTIL
 
+    FILTER_ATTRIBUTE_NAME = None
+    FILTER_ATTRIBUTE_VALUE = None
+
     SINCE = None
     UNTIL = None
 
@@ -90,7 +93,7 @@ def get_arguments():
     # Get command line arguments
     arguments, values = getopt.getopt(sys.argv[1:], short_options, long_options)
 
-    if len(arguments) < 4:
+    if len(arguments) < 3:
         print_help()
         sys.exit(2)
     # Handling the received parameters

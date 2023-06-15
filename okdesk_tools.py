@@ -11,6 +11,7 @@ JSON_FILE_NAME = 'issues.json'
 
 FILTER_ATTRIBUTE_NAME = 'depart'
 FILTER_ATTRIBUTE_VALUE = 'Отдел сервисного обслуживания'
+MAX_AUTHORS = 20
 
 
 def save_json_to_file(data, filename):
@@ -135,9 +136,10 @@ class OKDeskAPI:
     def companies(self):
         return self.get_companies()
 
-    def fetch_issues_list_by_contaсt(self, authors, created_since=None, created_until=None):
+    def fetch_issues_list_by_contaсt_short(self, authors, created_since=None, created_until=None):
 
         authors_url = ""
+
         for author in authors:
             authors_url += f"&contact_ids[]={author}"
 
@@ -160,6 +162,16 @@ class OKDeskAPI:
             print(f"Error fetching issues. Error code: {response.status_code}")
             print(response.json())
             return None
+
+    def fetch_issues_list_by_contaсt(self, authors, created_since=None, created_until=None):
+        result = []
+        for i in range(0, len(authors), MAX_AUTHORS):
+            result +=self.fetch_issues_list_by_contaсt_short(authors[i:i+MAX_AUTHORS],created_since,created_until)
+        return result
+
+
+
+
 
     def fetch_issues_detaild_by_contact(self, authors=[]):
 
@@ -211,18 +223,21 @@ class OKDeskAPI:
     def get_issues(self, issues_ids):
         return self.fetch_issues_by_ids(issues_ids)
 
-    def get_contacts_by_custom_attribute(self, attribute, value):
+    def get_contacts_by_custom_attribute(self, attribute=None, value=None):
 
         result = []
         if not self.contacts_data:
             self.get_contacts()
 
+
+
         for contact in self.contacts_data:
             for parameter in contact['parameters']:
-                if not parameter['code'] == attribute:
-                    continue
-                if not (parameter['value'] == value):
-                    continue
+                if not (attribute is None or value is None):
+                    if not parameter['code'] == attribute:
+                        continue
+                    if not (parameter['value'] == value):
+                        continue
                 result.append(contact)
 
         return result
