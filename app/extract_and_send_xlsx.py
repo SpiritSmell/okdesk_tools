@@ -24,11 +24,9 @@ def print_help():
 def get_arguments_from_env():
     global CONFIG_PATH
     # Чтение значения переменной окружения
-    value = os.getenv("config").strip('"').strip("'")
-
-
+    value = os.getenv("config")
     if value:
-        CONFIG_PATH = value
+        CONFIG_PATH = value.strip('"').strip("'")
 
 def get_arguments():
     """
