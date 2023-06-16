@@ -1,0 +1,15 @@
+version: '3'
+services:
+  myapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - data:/app/data
+    environment:
+      - CONFIG_PATH=/app/config/myconfig.yaml
+
+volumes:
+  data:

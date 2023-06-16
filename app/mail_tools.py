@@ -90,7 +90,7 @@ if __name__ == '__main__':
     receiver_emails = ['receiver1@example.com', 'receiver2@example.com', 'receiver3@example.com']
     subject = 'Test email with attachment'
     message_text = 'Hello, this is a test email.'
-    attachment_path = 'data.xlsx'
+    attachment_path = '../data.xlsx'
 
     # Create an instance of the EmailSender class
     email_sender = EmailSender(smtp_server, smtp_port, sender_email)

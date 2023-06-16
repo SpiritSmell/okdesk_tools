@@ -7,7 +7,7 @@ API_TOKEN = '2050867b5d83e762932efeb84042c510fe9f5440'
 ADDRESS = 'https://egk.okdesk.ru'
 RETRY_ATTEMPTS = 5
 
-JSON_FILE_NAME = 'issues.json'
+JSON_FILE_NAME = '../issues.json'
 
 FILTER_ATTRIBUTE_NAME = 'depart'
 FILTER_ATTRIBUTE_VALUE = 'Отдел сервисного обслуживания'

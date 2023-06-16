@@ -4,8 +4,8 @@ from jsonpath_ng.ext import parse
 import pandas as pd
 import re
 
-JSON_FILE_NAME = 'issues.json'
-EXCEL_FILE_NAME = "data.xlsx"
+JSON_FILE_NAME = '../issues.json'
+EXCEL_FILE_NAME = "../data.xlsx"
 
 EXPORT_FIELDS = [{'name': '№ заявки', 'filter': '$.id'},
                  {'name': 'Тема', 'filter': '$.title'},
@@ -247,7 +247,7 @@ def save_json_to_file(data, filename):
 
 
 if __name__ == '__main__':
-    EXPORT_FIELDS = load_json_from_file('json_to_excel.cfg')
+    EXPORT_FIELDS = load_json_from_file('../data/json_to_excel.cfg')
     json_data = load_json_from_file(JSON_FILE_NAME)
     rows = extract_data(json_data, EXPORT_FIELDS)
     save_data_to_excel(rows, EXCEL_FILE_NAME)

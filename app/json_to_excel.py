@@ -2,9 +2,9 @@ import json_tools as jt
 import getopt
 import sys
 
-JSON_FILE_NAME = 'issues.json'
-EXCEL_FILE_NAME = 'data.xlsx'
-CONFIG_FILENAME = 'json_to_excel.cfg'
+JSON_FILE_NAME = '../issues.json'
+EXCEL_FILE_NAME = '../data.xlsx'
+CONFIG_FILENAME = '../data/json_to_excel.cfg'
 
 
 def print_help():
