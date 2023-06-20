@@ -7,17 +7,6 @@ import re
 JSON_FILE_NAME = '../issues.json'
 EXCEL_FILE_NAME = "../data.xlsx"
 
-EXPORT_FIELDS = [{'name': '№ заявки', 'filter': '$.id'},
-                 {'name': 'Тема', 'filter': '$.title'},
-                 {'name': 'Характер задачи', 'filter': '$.parameters[?(@.code=="A")].value'},
-                 {'name': 'Дата регистрации', 'filter': '$.created_at'},
-                 {'name': 'Отдел', 'filter': '$.depart'},
-                 {'name': 'Ответственный сотрудник', 'filter': '$.assignee.name'},
-                 {'name': 'Контактное лицо', 'filter': '$.contact.name'},
-                 {'name': 'Наблюдатели', 'filter': '$.observers'},
-                 {'name': 'Статус', 'filter': '$.status.name'}
-                 ]
-
 
 def is_dict(variable):
     """
@@ -212,7 +201,7 @@ def extract_data(json_data, filter_fields):
     return rows
 
 
-def save_data_to_excel(data, filename):
+def save_data_to_excel(data, filename, append=False):
     """
     Saves data to an Excel file.
 
@@ -225,8 +214,12 @@ def save_data_to_excel(data, filename):
     """
     try:
         df = pd.DataFrame(data)
-        df.to_excel(filename, index=False)
-        print("Data saved successfully:", filename)
+        if append:
+            with pd.ExcelWriter(filename, mode='a') as writer:
+                df.to_excel(writer, index=False, sheet_name='Data')
+        else:
+            df.to_excel(filename, index=False)
+        print("Excel files saved successfully:", filename)
     except Exception as e:
         print("Error saving data (is the file opened elsewhere?):", e)
 

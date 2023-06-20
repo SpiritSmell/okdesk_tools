@@ -1,10 +1,12 @@
 import json_tools as jt
 import getopt
 import sys
+import shutil
 
-JSON_FILE_NAME = '../issues.json'
-EXCEL_FILE_NAME = '../data.xlsx'
-CONFIG_FILENAME = '../data/json_to_excel.cfg'
+JSON_FILE_NAME = None
+EXCEL_FILE_NAME = None
+CONFIG_FILENAME = None
+EXCEL_TEMPLATE_NAME = None
 
 
 def print_help():
@@ -28,10 +30,11 @@ def get_arguments():
     global EXCEL_FILE_NAME
     global JSON_FILE_NAME
     global CONFIG_FILENAME
+    global EXCEL_TEMPLATE_NAME
 
     # Options definition
-    short_options = "he:j:c:"
-    long_options = ["help", "excel=", "json=", "config="]
+    short_options = "he:j:c:t:"
+    long_options = ["help", "excel=", "json=", "config=","template="]
 
     # Get command line arguments
     try:
@@ -58,6 +61,9 @@ def get_arguments():
         elif current_argument in ("-c", "--config"):
             CONFIG_FILENAME = current_value
             print("Config file name:", CONFIG_FILENAME)
+        elif current_argument in ("-t", "--template"):
+            EXCEL_TEMPLATE_NAME = current_value
+            print("Config file name:", EXCEL_TEMPLATE_NAME)
 
     # Process remaining arguments
     for value in values:
@@ -72,13 +78,21 @@ def main():
     try:
         json_data = jt.load_json_from_file(JSON_FILE_NAME)
         rows = jt.extract_data(json_data, EXPORT_FIELDS)
-        jt.save_data_to_excel(rows, EXCEL_FILE_NAME)
+        if EXCEL_TEMPLATE_NAME:
+            # Копирование файла
+            shutil.copy(EXCEL_TEMPLATE_NAME, EXCEL_FILE_NAME)
+        jt.save_data_to_excel(rows, EXCEL_FILE_NAME, append=(EXCEL_TEMPLATE_NAME is not None))
         print("Export to Excel completed successfully.")
     except Exception as e:
         print("An error occurred during export:", e)
 
 
 if __name__ == '__main__':
+
+    JSON_FILE_NAME = '../issues.json'
+    EXCEL_FILE_NAME = '../data.xlsx'
+    CONFIG_FILENAME = '../data/json_to_excel.cfg'
+    EXCEL_TEMPLATE_NAME = '../data/template.xlsx'
     get_arguments()
     try:
         EXPORT_FIELDS = jt.load_json_from_file(CONFIG_FILENAME)

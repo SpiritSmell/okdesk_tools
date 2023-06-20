@@ -79,6 +79,7 @@ def main():
     global CONFIG_PATH
 
     if not CONFIG_PATH:
+        print("Error. Config path is not found")
         print_help()
         sys.exit(2)
 

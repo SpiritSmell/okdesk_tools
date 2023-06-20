@@ -169,10 +169,6 @@ class OKDeskAPI:
             result +=self.fetch_issues_list_by_contaсt_short(authors[i:i+MAX_AUTHORS],created_since,created_until)
         return result
 
-
-
-
-
     def fetch_issues_detaild_by_contact(self, authors=[]):
 
         authors_url = ""
