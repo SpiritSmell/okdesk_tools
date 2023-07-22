@@ -63,7 +63,7 @@ def get_arguments():
             print("Config file name:", CONFIG_FILENAME)
         elif current_argument in ("-t", "--template"):
             EXCEL_TEMPLATE_NAME = current_value
-            print("Config file name:", EXCEL_TEMPLATE_NAME)
+            print("Template file name:", EXCEL_TEMPLATE_NAME)
 
     # Process remaining arguments
     for value in values:

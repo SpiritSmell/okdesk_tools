@@ -111,7 +111,7 @@ def get_arguments():
             print("JSON file name:", JSON_FILE_NAME)
         elif current_argument in ("-k", "--key"):
             API_TOKEN = current_value
-            print("Destination book name:", API_TOKEN)
+            print("API token:", API_TOKEN)
         elif current_argument in ("-a", "--address"):
             ADDRESS = current_value
             print("Address:", ADDRESS)

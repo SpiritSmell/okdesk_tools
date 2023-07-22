@@ -5,7 +5,8 @@ import requests
 
 API_TOKEN = '2050867b5d83e762932efeb84042c510fe9f5440'
 ADDRESS = 'https://egk.okdesk.ru'
-RETRY_ATTEMPTS = 5
+RETRY_ATTEMPTS = 10
+TIMEOUT = 10
 
 JSON_FILE_NAME = '../issues.json'
 
@@ -15,8 +16,8 @@ MAX_AUTHORS = 20
 
 
 def save_json_to_file(data, filename):
-    with open(filename, 'w') as file:
-        json.dump(data, file, indent = 4)
+    with open(filename, 'w', encoding="utf-8") as file:
+        json.dump(data, file, indent=4)
 
 
 class OKDeskAPI:
@@ -30,7 +31,7 @@ class OKDeskAPI:
 
     def fetch_roles(self):
         url = f"{self.address}/api/v1/employees/roles?api_token={self.api_token}"
-        response = requests.get(url)
+        response = requests.get(url, timeout=TIMEOUT)
 
         if response.status_code == 200:
             roles = response.json()
@@ -67,7 +68,7 @@ class OKDeskAPI:
                 first_request = False
             else:
                 url = f"{self.address}/api/v1/contacts/list?api_token={self.api_token}&page[size]={STEP}&page[from_id]={from_id}"
-            response = requests.get(url)
+            response = requests.get(url, timeout=TIMEOUT)
 
             if response.status_code == 200:
                 contacts = response.json()
@@ -94,7 +95,7 @@ class OKDeskAPI:
     def find_contacts(self, search_string):
         url = f"{ADDRESS}/api/v1/contacts/?api_token={self.api_token}&search_string={search_string}"
 
-        response = requests.get(url)
+        response = requests.get(url, timeout=TIMEOUT)
 
         if response.status_code == 200:
             results = response.json()
@@ -113,7 +114,7 @@ class OKDeskAPI:
 
     def fetch_companies(self):
         url = f"{self.address}/api/v1/companies/list?api_token={self.api_token}"
-        response = requests.get(url)
+        response = requests.get(url, timeout=TIMEOUT)
 
         if response.status_code == 200:
             companies = response.json()
@@ -151,7 +152,7 @@ class OKDeskAPI:
         if created_until:
             url = url + f"&created_until={created_until}"
 
-        response = requests.get(url)
+        response = requests.get(url, timeout=TIMEOUT)
 
         if response.status_code == 200:
             issues = response.json()
@@ -166,7 +167,14 @@ class OKDeskAPI:
     def fetch_issues_list_by_contaсt(self, authors, created_since=None, created_until=None):
         result = []
         for i in range(0, len(authors), MAX_AUTHORS):
-            result +=self.fetch_issues_list_by_contaсt_short(authors[i:i+MAX_AUTHORS],created_since,created_until)
+            result += self.fetch_issues_list_by_contaсt_short(authors[i:i + MAX_AUTHORS], created_since, created_until)
+        return result
+
+    def fetch_all_issues(self):
+        all_authors = []
+        for contact in self.contacts:
+            all_authors += [contact['id']]
+        result = self.fetch_issues_list_by_contaсt(all_authors, None, None)
         return result
 
     def fetch_issues_detaild_by_contact(self, authors=[]):
@@ -176,7 +184,7 @@ class OKDeskAPI:
             authors_url += f"&contact_ids[]={author}"
 
         url = f"{self.address}/api/v1/issues/list?api_token={self.api_token}{authors_url}"
-        response = requests.get(url)
+        response = requests.get(url, timeout=TIMEOUT)
 
         if response.status_code == 200:
             issues = response.json()
@@ -195,7 +203,7 @@ class OKDeskAPI:
         url = f"{self.address}/api/v1/issues/{issue}?api_token={self.api_token}"
         for attempt in range(RETRY_ATTEMPTS):
             try:
-                response = requests.get(url)
+                response = requests.get(url, timeout=TIMEOUT)
                 break
             except requests.exceptions.RequestException as e:
                 print(f"Error executing the request: {e}")
@@ -225,8 +233,7 @@ class OKDeskAPI:
         if not self.contacts_data:
             self.get_contacts()
 
-
-
+        print(f"Collecting authors for attribute{attribute} = {value}")
         for contact in self.contacts_data:
             for parameter in contact['parameters']:
                 if not (attribute is None or value is None):

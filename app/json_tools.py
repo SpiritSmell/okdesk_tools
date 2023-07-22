@@ -177,7 +177,8 @@ def extract_data(json_data, filter_fields):
                 match += json.dumps(match_1.value, ensure_ascii=False)
             if match == '':
                 match = '""'
-            if 'regexp_filter' in filter_field:
+            #process regexp if value is not None
+            if ('regexp_filter' in filter_field) and (match_1.value is not None):
                 pattern = filter_field['regexp_filter']
                 try:
                     regexp_matches = re.findall(pattern, match)
@@ -215,7 +216,7 @@ def save_data_to_excel(data, filename, append=False):
     try:
         df = pd.DataFrame(data)
         if append:
-            with pd.ExcelWriter(filename, mode='a') as writer:
+            with pd.ExcelWriter(filename, mode='a', engine='openpyxl',if_sheet_exists='replace') as writer:
                 df.to_excel(writer, index=False, sheet_name='Data')
         else:
             df.to_excel(filename, index=False)

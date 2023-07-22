@@ -2,11 +2,9 @@ import sys
 import getopt
 import json
 import os
-import extract_issues as ei
-import json_to_excel as je
-import send_to_email as se
+import extract_and_send_xlsx as es
 
-class IssueExtractor:
+class BatchExtractAndSender:
     def __init__(self):
         self.CONFIG_PATH = None
         self.settings = None
@@ -16,14 +14,14 @@ class IssueExtractor:
         """
         Prints the help message with usage instructions.
         """
-        print("Usage: extract_and_send_xlsx.py -h|--help -c|--config=<filename>")
+        print("Usage: batch_send.py -h|--help -c|--config=<filename>")
         print("")
         print("Options:")
         print("-h, --help                   Show help message and exit")
         print("-c, --config <filename>      Path to the configuration file")
         print("")
         print("Example:")
-        print("extract_and_send_xlsx.py -c /path/to/extract_and_send_xlsx.cfg")
+        print("batch_send.py -c /path/to/batch_send.cfg")
 
     def get_arguments_from_env(self):
         # Read the value from the environment variable
@@ -91,21 +89,24 @@ class IssueExtractor:
         Main function to extract issues, convert to Excel, and send the email with attachments using the provided settings.
         """
 
-        # Load settings into extract_issues.py
-        self.configure_module_settings(ei, self.settings.get('extract_issues', {}))
-        ei.main()
+        if not self.CONFIG_PATH:
+            print("Error: Config path is not found")
+            self.print_help()
+            sys.exit(2)
 
-        # Load settings into json_to_excel.py
-        self.configure_module_settings(je, self.settings.get('json_to_excel', {}))
-        je.main()
+        extractor = es.IssueExtractor()
 
-        # Load settings into send_to_email.py
-        self.configure_module_settings(se, self.settings.get('send_to_email', {}))
-        se.main()
+
+        for setting in self.settings:
+            extractor.CONFIG_PATH = setting['CONFIG_FILE_NAME']
+            extractor.load_settings_from_file()
+            for name, item in setting['extract_and_send_xlsx'].items():
+                extractor.settings[name].update(item)
+            extractor.main()
 
 
 if __name__ == '__main__':
-    extractor = IssueExtractor()
+    extractor = BatchExtractAndSender()
     extractor.get_arguments_from_env()
     extractor.get_arguments()
     extractor.load_settings_from_file()
